@@ -23,7 +23,7 @@ static char can_iface[MAX_NAME_LEN];
 static unsigned int sock_index;
 
 /* prototypes */
-static int read_timeout(int fd, void *buf, long int msec);
+static long read_timeout(int fd, void *buf, long int msec);
 
 
 /* initializes can interface */
@@ -84,8 +84,9 @@ int raw_can_map_channel(uint32_t can_id) {
 }
 
 /* sends some data over raw can */
-int raw_can_send(unsigned int channel, char *data, unsigned int len) {
-	int s, ret;
+long raw_can_send(unsigned int channel, char *data, unsigned int len) {
+	int s;
+	long ret;
 	uint32_t can_id;
 	struct can_frame cf = {0};
 
@@ -112,8 +113,9 @@ int raw_can_send(unsigned int channel, char *data, unsigned int len) {
 }
 
 /* receive data from socket*/
-int raw_can_receive(unsigned int channel, char *data, unsigned int *len, long int timeout) {
-	int ret, s;
+long raw_can_receive(unsigned int channel, char *data, unsigned int *len, long int timeout) {
+	int s;
+	long ret;
 	struct can_frame cf = {0};
 
 	if (!data || channel >= sock_index)
@@ -192,7 +194,7 @@ void raw_can_stop(void) {
 }
 
 /* read with timeout */
-static int read_timeout(int fd, void *buf, long int msec) {
+static long read_timeout(int fd, void *buf, long int msec) {
 	fd_set set;
 	struct timeval timeout;
 	int ret;

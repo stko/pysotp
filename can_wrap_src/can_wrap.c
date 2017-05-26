@@ -10,7 +10,7 @@
 #include <net/if.h>
 
 #include <linux/can.h>
-#include <linux/can/isotp.h>
+#include "linux/can/isotp.h"
 
 #define MAX_NAME_LEN 20
 #define MAX_SOCKETS 20
@@ -23,7 +23,7 @@ static unsigned int sock_index;
 static struct sockaddr_can addr[MAX_SOCKETS];
 
 /* prototypes */
-static int read_timeout(int fd, void *buf, long int msec);
+static long read_timeout(int fd, void *buf, long int msec);
 
 
 /* initializes can interface */
@@ -45,13 +45,18 @@ int iso_tp_init(char *iface, unsigned int len) {
 /* returns channel id */
 int iso_tp_map_channel(uint32_t tx_id, uint32_t rx_id) {
 	int s;
+    static struct can_isotp_options opts;
 
-	if (sock_index + 1 >= MAX_SOCKETS)
+	if (sock_index + 1 >= MAX_SOCKETS){
+		perror("sock_index");
 		return ERR;
+	}
 
 	/* fail if can_iface is not set */
-	if (!strlen(can_iface))
+	if (!strlen(can_iface)){
+		perror("can_iface");
 		return ERR;
+	}
 
 	addr[sock_index].can_addr.tp.tx_id = (canid_t) tx_id;
 	addr[sock_index].can_addr.tp.rx_id = (canid_t) rx_id;
@@ -62,6 +67,13 @@ int iso_tp_map_channel(uint32_t tx_id, uint32_t rx_id) {
 		perror("socket");
 		return ERR;
 	}
+	socklen_t optLen;
+	getsockopt(s, SOL_CAN_ISOTP, CAN_ISOTP_OPTS, &opts, &optLen);
+	opts.txpad_content=0;
+	//opts.rxpad_content=0;
+	//opts.flags |= (CAN_ISOTP_TX_PADDING | CAN_ISOTP_RX_PADDING);
+	opts.flags |= CAN_ISOTP_TX_PADDING;
+	setsockopt(s, SOL_CAN_ISOTP, CAN_ISOTP_OPTS, &opts, sizeof(opts));
 
 	if (bind(s, (struct sockaddr *)&addr[sock_index], sizeof(struct sockaddr)) < 0) {
 		perror("bind");
@@ -76,8 +88,8 @@ int iso_tp_map_channel(uint32_t tx_id, uint32_t rx_id) {
 
 /* sends some data over iso-tp */
 int iso_tp_send(unsigned int channel, char *data, unsigned int len) {
-	int s, ret;
-
+	int s;
+	long ret;
 	if (!data || !len || len > MAX_DATA_LEN || channel >= sock_index)
 		return ERR;
 
@@ -95,9 +107,9 @@ int iso_tp_send(unsigned int channel, char *data, unsigned int len) {
 }
 
 /* receive data from socket*/
-int iso_tp_receive(unsigned int channel, char *data, unsigned int *len, long int timeout) {
-	int ret, s;
-
+long iso_tp_receive(unsigned int channel, char *data, unsigned int *len, long int timeout) {
+	int s;
+	long ret;
 	if (channel >= sock_index)
 		return ERR;
 
@@ -160,7 +172,7 @@ void iso_tp_stop(void) {
 }
 
 /* read with timeout */
-static int read_timeout(int fd, void *buf, long int msec) {
+static long read_timeout(int fd, void *buf, long int msec) {
 	fd_set set;
 	struct timeval timeout;
 	int ret;

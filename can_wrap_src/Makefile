@@ -1,7 +1,7 @@
 
 CC=clang
 
-CFLAGS+=-g -Wall -Wextra -Werror -Wconversion -Wpedantic -Wdeclaration-after-statement -W -Wshadow
+CFLAGS+=-g -Wall -Wextra -Werror -Wconversion -Wpedantic -Wdeclaration-after-statement -W -Wshadow -fpic
 CFLAGS+=-Wcast-qual -Wwrite-strings -Wundef -Wcast-align -Wmissing-prototypes -Wno-missing-field-initializers
 # enable all warnings for clang
 CFLAGS+=-Weverything

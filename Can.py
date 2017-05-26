@@ -23,7 +23,7 @@ def convert_name(name):
 def can_start(suite_name=''):
     # get can interface
     proc = Popen(['./check_iface.sh'], stdout=PIPE, stdin=PIPE, stderr=STDOUT)
-    iface = proc.communicate()[0].strip()
+    iface = proc.communicate()[0].strip().split()[0]
     if proc.returncode != 0:
         raise Exception(iface)
     # initialize
@@ -36,10 +36,9 @@ def can_start(suite_name=''):
     # start logging
     global DEVNULL
     DEVNULL = open(os.devnull, 'wb')
-    global logger
-    logger = Popen(['tshark', '-i', iface, '-w', 'output/can_{}.pcap'.format(convert_name(suite_name))], stdout=DEVNULL,
-                   stderr=STDOUT)
-    sleep(1)  # wait for logger to start
+    #global logger
+    #logger = Popen(['tshark', '-i', iface, '-w', 'output/can_{}.pcap'.format(convert_name(suite_name))], stdout=DEVNULL,                   stderr=STDOUT)
+    #sleep(1)  # wait for logger to start
 
 
 def can_stop():
@@ -84,6 +83,32 @@ class IsoTp:
         ret = dll.iso_tp_send(ch_id, data.to_bytes(), len(data))
         if ret < 0:
             raise Exception("Error sending: {}".format(ret))
+
+    def iso_tp_send_and_receive(self, channel, data, timeout):
+        data = DataList.from_string(data)
+        try:
+            ch_id = self.ch_ids[channel]
+        except KeyError:
+            raise Exception("Unmapped channel")
+        ret = dll.iso_tp_send(ch_id, data.to_bytes(), len(data))
+        if ret < 0:
+            raise Exception("Error sending: {}".format(ret))
+    
+        rec_data = create_string_buffer(4095)
+        rec_len = c_int()
+        ret = dll.iso_tp_receive(ch_id, rec_data, byref(rec_len), int(timeout))
+        if ret == ERR:
+            raise Exception("Error receiving")
+        elif ret == ERR_TIMEOUT:
+            raise Exception("Timeout expired without receiving data")
+        rec_data = DataList.from_bytes(rec_data.raw[:rec_len.value])
+	return str(rec_data)
+   
+    
+    
+    
+    
+    
 
     def iso_tp_receive_and_check(self, channel, data, timeout):
         ch_id = self.ch_ids[channel]
