@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 
 from Can import *
-from FordStuff import key_from_seed
+try:
+    from FordStuff import key_from_seed 
+except ImportError:
+    def key_from_seed(a,b,c): # dummy declaration, in case FordStuff is not installed
+	    return False
 
 def send(request):
 	try:
@@ -34,3 +38,13 @@ send('27 03')
 send('27 04')
 send('27 05')
 send('27 06')
+send('27 07')
+send('27 08')
+send('27 09')
+send('27 10')
+send('27 11')
+send('27 12')
+send('27 13')
+send('27 14')
+send('27 15')
+send('27 16')

@@ -12,40 +12,23 @@ ERR_TIMEOUT = -2
 required_dll = os.path.join(os.path.dirname(__file__), 'libcanwrap.so')
 dll = cdll.LoadLibrary(required_dll)
 
-logger = None
-DEVNULL = None
-
-
 def convert_name(name):
     return name.lower().split('.')[-1].replace(' ', '_')
 
 
-def can_start(suite_name=''):
-    # get can interface
-    proc = Popen(['./check_iface.sh'], stdout=PIPE, stdin=PIPE, stderr=STDOUT)
-    iface = proc.communicate()[0].strip().split()[0]
-    if proc.returncode != 0:
-        raise Exception(iface)
+def can_start(canInterface='can0'):
     # initialize
-    ret = dll.raw_can_init(iface, len(iface))
+    ret = dll.raw_can_init(canInterface, len(canInterface))
     if ret < 0:
         raise Exception("Error on initialization")
-    ret = dll.iso_tp_init(iface, len(iface))
+    ret = dll.iso_tp_init(canInterface, len(canInterface))
     if ret < 0:
         raise Exception("Error on initialization")
-    # start logging
-    global DEVNULL
-    DEVNULL = open(os.devnull, 'wb')
-    #global logger
-    #logger = Popen(['tshark', '-i', iface, '-w', 'output/can_{}.pcap'.format(convert_name(suite_name))], stdout=DEVNULL,                   stderr=STDOUT)
-    #sleep(1)  # wait for logger to start
 
 
 def can_stop():
     dll.iso_tp_stop()
     dll.raw_can_stop()
-    logger.terminate()
-    DEVNULL.close()
 
 
 class IsoTp:
