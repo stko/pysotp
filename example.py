@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from Can import *
+from pysotp import *
 try:
     from FordStuff import key_from_seed 
 except ImportError:

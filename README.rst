@@ -29,7 +29,7 @@ As the can-isotp kernel module seems not to be available as debian package yet, 
 
    To build:
 
-On Ubuntu 16.04, you might need to tweak the KERNEL_VERSION directive in isotp.c:1112 (just check the error message, in case)
+   On Ubuntu 16.04, you might need to tweak the KERNEL_VERSION directive in isotp.c:1112 (just check the error message, in case)
 
       ``make``
 
@@ -84,8 +84,9 @@ In opposite to the original OTAKeys pysotp version, this one is modified to work
 
 Set the CAN interface up:
 
-``sudo ip link set can0 type can bitrate 125000 triple-sampling on``
-``sudo ip link set can0 up``
+::
+ sudo ip link set can0 type can bitrate 125000 triple-sampling on
+ sudo ip link set can0 up
 
 The accompanied udev rule is specific for PCAN-USB CAN interfaces, but can easily be modified for different CAN interfaces.
 
