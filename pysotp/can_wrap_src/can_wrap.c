@@ -12,42 +12,45 @@
 #include <linux/can.h>
 #include "linux/can/isotp.h"
 
-#define MAX_NAME_LEN 20
-#define MAX_SOCKETS 20
 #define MAX_DATA_LEN 4095
 
 /* globals */
-static int sockets[MAX_SOCKETS];
-static char can_iface[MAX_NAME_LEN];
-static unsigned int sock_index;
-static struct sockaddr_can addr[MAX_SOCKETS];
+static unsigned int max_nr_of_sockets = 0 ;
+
+static int *sockets;
+
+static unsigned int sock_index = 0 ;
+static struct sockaddr_can *addr;
 
 /* prototypes */
 static long read_timeout(int fd, void *buf, long int msec);
 
 
 /* initializes can interface */
-int iso_tp_init(char *iface, unsigned int len) {
+int reserveBuffer(unsigned int nrOfSockets) {
 
-	if (!iface || !len || len >= MAX_NAME_LEN)
+	sockets=malloc(nrOfSockets*sizeof(int));
+	if(!sockets){
+		perror("malloc socks");
 		return ERR;
-
-	/* fail if can_iface is already set */
-	if (strlen(can_iface))
+	}
+	addr=malloc(nrOfSockets*sizeof(struct sockaddr_can));
+	if(!addr){
+		perror("malloc sockaddr_can");
 		return ERR;
-
-	sock_index = 0;
-	strncpy(can_iface, iface, len + 1);
+	}
+	max_nr_of_sockets=nrOfSockets;
 	return OK;
 }
 
+
+
 /* opens and bind socket to certain address pair */
 /* returns channel id */
-int iso_tp_map_channel(uint32_t tx_id, uint32_t rx_id) {
+int iso_tp_map_channel(char *can_iface, uint32_t tx_id, uint32_t rx_id) {
 	int s;
     static struct can_isotp_options opts;
-
-	if (sock_index + 1 >= MAX_SOCKETS){
+	if (sock_index + 1 >= max_nr_of_sockets){
 		perror("sock_index");
 		return ERR;
 	}
@@ -93,10 +96,6 @@ int iso_tp_send(unsigned int channel, char *data, unsigned int len) {
 	if (!data || !len || len > MAX_DATA_LEN || channel >= sock_index)
 		return ERR;
 
-	/* fail if can_iface is not set */
-	if (!strlen(can_iface))
-		return ERR;
-
 	s = sockets[channel];
 	ret = write(s, data, len);
 
@@ -116,10 +115,6 @@ long iso_tp_receive(unsigned int channel, char *data, unsigned int *len, long in
 	if (!data)
 		return ERR;
 
-	/* fail if can_iface is not set */
-	if (!strlen(can_iface))
-		return ERR;
-
 	s = sockets[channel];
 	ret = read_timeout(s, data, timeout);
 
@@ -135,10 +130,6 @@ int iso_tp_flush_rx(unsigned int channel) {
 	int s;
 
 	if (channel >= sock_index)
-		return ERR;
-
-	/* fail if can_iface is not set */
-	if (!strlen(can_iface))
 		return ERR;
 
 	s = sockets[channel];
@@ -168,7 +159,6 @@ int iso_tp_flush_rx(unsigned int channel) {
 void iso_tp_stop(void) {
 	for (; sock_index != 0; sock_index--)
 		close(sockets[sock_index]);
-	memset(can_iface, 0, MAX_NAME_LEN);
 }
 
 /* read with timeout */

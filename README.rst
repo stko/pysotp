@@ -5,8 +5,15 @@ Intro
 
 This a modified version of the original pysotp from `OTAKeys <https://github.com/OTAkeys/pysotp>`_. While the original software is made to include isotp into the Robottest Framework, this version is more tailored to allow communication with electronic modules inside vehicles as part of the `OOBD <https://oobd.org>`_ tool sets. For that several functions and structures have been modified.
 
-As the work has just begun, this project is work in progress
+The main differences to the original are:
 
+* all robotframework references and logging functions removed
+* the channels.py configuration concept is replaced against module.py (see module_template.py), which references the module tx/rx and optional security codes just by the symbolic module name
+* hard coded limit of channels replaced against initialisation during startup
+* supports multiple can devices instead of only one
+* each channel is now it's own object, representing a single module
+* datalist removed; internal can data variables all set to byte array type to avoid several string castings
+* basic support Ford security access handling by using external, not supported python module as optional add-on  
 
 Setup
 =====

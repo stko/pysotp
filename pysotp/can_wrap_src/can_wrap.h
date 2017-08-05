@@ -27,11 +27,11 @@ void raw_can_stop(void);
 
 
 /* initializes can interface */
-int iso_tp_init(char *iface, unsigned int len);
+int reserveBuffer(unsigned int nrOfSockets);
 
 /* opens and bind socket to certain address pair */
 /* returns channel id */
-int iso_tp_map_channel(uint32_t tx_id, uint32_t rx_id);
+int iso_tp_map_channel(char *can_iface, uint32_t tx_id, uint32_t rx_id);
 
 /* sends some data over iso-tp */
 int iso_tp_send(unsigned int channel, char *data, unsigned int len);
